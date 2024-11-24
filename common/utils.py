@@ -4,15 +4,33 @@ from __future__ import absolute_import
 
 import os
 import glob
-
 import imageio
-import scipy.misc as misc
 import numpy as np
 from io import BytesIO
-from PIL import Image
-from scipy.misc import imresize
-
 import matplotlib.pyplot as plt
+from PIL import Image, ImageDraw, ImageFont
+
+
+def draw_example(char, font, canvas_size):
+    """
+    주어진 문자와 폰트를 사용해 캔버스에 이미지를 그립니다.
+    """
+    try:
+        # 흰 배경으로 새 이미지 생성
+        image = Image.new("L", (canvas_size, canvas_size), "white")
+        draw = ImageDraw.Draw(image)
+
+        # 텍스트 크기 계산
+        bbox = draw.textbbox((0, 0), char, font=font)  # 텍스트 바운딩 박스
+        w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]  # 너비와 높이 계산
+
+        # 텍스트 위치 조정
+        x, y = (canvas_size - w) // 2, (canvas_size - h) // 2
+        draw.text((x, y), char, font=font, fill="black")
+        return np.array(image)  # NumPy 배열로 반환
+    except Exception as e:
+        print(f"Error generating image for character {char}: {e}")
+        return None
 
 
 def pad_seq(seq, batch_size):
@@ -42,21 +60,39 @@ def denorm_image(x):
     return out.clamp(0, 1)
 
 
-def read_split_image(img):
-    mat = misc.imread(img).astype(np.float)
-    side = int(mat.shape[1] / 2)
-    assert side * 2 == mat.shape[1]
-    img_A = mat[:, :side]  # target
-    img_B = mat[:, side:]  # source
+def read_split_image(img_path):
+    """
+    이미지를 읽어 절반으로 나누어 반환합니다.
+    img_A: 왼쪽 절반 (target)
+    img_B: 오른쪽 절반 (source)
+    """
+    try:
+        # 이미지 열기
+        img = Image.open(img_path).convert("RGB")  # RGB 형식으로 변환
+        mat = np.array(img).astype(np.float32)  # NumPy 배열로 변환
+        
+        # 이미지 절반으로 나누기
+        side = mat.shape[1] // 2
+        assert side * 2 == mat.shape[1], "이미지 너비는 2의 배수여야 합니다."
+        img_A = mat[:, :side, :]  # 왼쪽 절반
+        img_B = mat[:, side:, :]  # 오른쪽 절반
 
-    return img_A, img_B
+        return img_A, img_B
+    except Exception as e:
+        print(f"[Error] Failed to read and split image: {e}")
+        return None, None
 
 
 def shift_and_resize_image(img, shift_x, shift_y, nw, nh):
-    w, h = img.shape
-    enlarged = misc.imresize(img, [nw, nh])
-    return enlarged[shift_x:shift_x + w, shift_y:shift_y + h]
-
+    try:
+        img_pil = Image.fromarray(img)  # NumPy 배열을 PIL 이미지로 변환
+        resized_img = img_pil.resize((nw, nh), Image.LANCZOS)  # Pillow의 resize 함수 사용
+        resized_array = np.array(resized_img)  # PIL 이미지를 다시 NumPy 배열로 변환
+        cropped_img = resized_array[shift_x:shift_x + img.shape[0], shift_y:shift_y + img.shape[1]]
+        return cropped_img
+    except Exception as e:
+        print(f"Error in shift_and_resize_image: {e}")
+        return img
 
 def scale_back(images):
     return (images + 1.) / 2.
@@ -72,10 +108,20 @@ def merge(images, size):
 
     return img
 
-
 def save_concat_images(imgs, img_path):
-    concated = np.concatenate(imgs, axis=1)
-    misc.imsave(img_path, concated)
+    """
+    여러 이미지를 가로로 결합하여 저장합니다.
+    """
+    try:
+        # 이미지를 NumPy 배열에서 Pillow 이미지로 변환
+        concated = np.concatenate(imgs, axis=1)  # 이미지를 가로로 결합
+        result_img = Image.fromarray(concated.astype(np.uint8))  # Pillow 이미지 생성
+
+        # 결과 이미지 저장
+        result_img.save(img_path)
+        print(f"[INFO] Saved concatenated image to {img_path}")
+    except Exception as e:
+        print(f"[Error] Failed to save concatenated images: {e}")
 
 
 def save_gif(gif_path, image_path, file_name):
@@ -102,97 +148,45 @@ def show_comparison(font_num, real_targets, fake_targets, show_num=8):
     
     
 def tight_crop_image(img, verbose=False, resize_fix=False):
-    img_size = img.shape[0]
-    full_white = img_size
-    col_sum = np.where(full_white - np.sum(img, axis=0) > 1)
-    row_sum = np.where(full_white - np.sum(img, axis=1) > 1)
-    y1, y2 = row_sum[0][0], row_sum[0][-1]
-    x1, x2 = col_sum[0][0], col_sum[0][-1]
-    cropped_image = img[y1:y2, x1:x2]
-    cropped_image_size = cropped_image.shape
-    
+    """
+    이미지를 타이트하게 크롭합니다.
+    """
+    full_white = 255  # 흰색 픽셀 값
+    tolerance = 5  # 허용 오차 (흰색에서 약간 벗어난 값까지 감지)
+    col_sum = np.where(np.sum(img, axis=0) < (full_white - tolerance) * img.shape[0])
+    row_sum = np.where(np.sum(img, axis=1) < (full_white - tolerance) * img.shape[1])
+
+    if col_sum[0].size > 0 and row_sum[0].size > 0:
+        y1, y2 = row_sum[0][0], row_sum[0][-1]
+        x1, x2 = col_sum[0][0], col_sum[0][-1]
+        cropped_image = img[y1:y2, x1:x2]
+    else:
+        cropped_image = img  # 감지 실패 시 원본 반환
+
     if verbose:
-        print('(left x1, top y1):', (x1, y1))
-        print('(right x2, bottom y2):', (x2, y2))
-        print('cropped_image size:', cropped_image_size)
-        
-    if type(resize_fix) == int:
-        origin_h, origin_w = cropped_image.shape
-        if origin_h > origin_w:
-            resize_w = int(origin_w * (resize_fix / origin_h))
-            resize_h = resize_fix
-        else:
-            resize_h = int(origin_h * (resize_fix / origin_w))
-            resize_w = resize_fix
-        if verbose:
-            print('resize_h:', resize_h)
-            print('resize_w:', resize_w, \
-                  '[origin_w %d / origin_h %d * target_h %d]' % (origin_w, origin_h, target_h))
-        
-        # resize
-        cropped_image = imresize(cropped_image, (resize_h, resize_w))
-        cropped_image = normalize_image(cropped_image)
-        cropped_image_size = cropped_image.shape
-        if verbose:
-            print('resized_image size:', cropped_image_size)
-        
-    elif type(resize_fix) == float:
-        origin_h, origin_w = cropped_image.shape
-        resize_h, resize_w = int(origin_h * resize_fix), int(origin_w * resize_fix)
-        if resize_h > 120:
-            resize_h = 120
-            resize_w = int(resize_w * 120 / resize_h)
-        if resize_w > 120:
-            resize_w = 120
-            resize_h = int(resize_h * 120 / resize_w)
-        if verbose:
-            print('resize_h:', resize_h)
-            print('resize_w:', resize_w)
-        
-        # resize
-        cropped_image = imresize(cropped_image, (resize_h, resize_w))
-        cropped_image = normalize_image(cropped_image)
-        cropped_image_size = cropped_image.shape
-        if verbose:
-            print('resized_image size:', cropped_image_size)
-    
+        print(f"Cropping bounds: ({y1}, {y2}), ({x1}, {x2}) -> Cropped size: {cropped_image.shape}")
+
     return cropped_image
 
 
 def add_padding(img, image_size=128, verbose=False, pad_value=None):
+    """
+    이미지에 패딩을 추가하여 정사각형으로 만듭니다.
+    """
     height, width = img.shape
-    if not pad_value:
-        pad_value = img[0][0]
-    if verbose:
-        print('original cropped image size:', img.shape)
-    
-    # Adding padding of x axis - left, right
+    pad_value = pad_value or img[0][0]
     pad_x_width = (image_size - width) // 2
-    pad_x = np.full((height, pad_x_width), pad_value, dtype=np.float32)
-    img = np.concatenate((pad_x, img), axis=1)
-    img = np.concatenate((img, pad_x), axis=1)
-    
-    width = img.shape[1]
-
-    # Adding padding of y axis - top, bottom
     pad_y_height = (image_size - height) // 2
-    pad_y = np.full((pad_y_height, width), pad_value, dtype=np.float32)
-    img = np.concatenate((pad_y, img), axis=0)
-    img = np.concatenate((img, pad_y), axis=0)
-    
-    # Match to original image size
-    width = img.shape[1]
-    if img.shape[0] % 2:
-        pad = np.full((1, width), pad_value, dtype=np.float32)
-        img = np.concatenate((pad, img), axis=0)
-    height = img.shape[0]
-    if img.shape[1] % 2:
-        pad = np.full((height, 1), pad_value, dtype=np.float32)
-        img = np.concatenate((pad, img), axis=1)
+
+    pad_x = np.full((height, pad_x_width), pad_value, dtype=np.float32)
+    pad_y = np.full((pad_y_height, width + 2 * pad_x_width), pad_value, dtype=np.float32)
+
+    img = np.concatenate((pad_x, img, pad_x), axis=1)
+    img = np.concatenate((pad_y, img, pad_y), axis=0)
 
     if verbose:
-        print('final image size:', img.shape)
-    
+        print(f"Final image size: {img.shape}")
+
     return img
 
 
