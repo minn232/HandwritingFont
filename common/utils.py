@@ -169,7 +169,7 @@ def tight_crop_image(img, verbose=False, resize_fix=False):
     return cropped_image
 
 
-def add_padding(img, image_size=128, verbose=False, pad_value=None):
+def add_padding(img, image_size=128, verbose=False, pad_value=255):
     """
     이미지에 패딩을 추가하여 정사각형으로 만듭니다.
     """

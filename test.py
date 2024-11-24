@@ -8,13 +8,12 @@ from common.utils import tight_crop_image, add_padding  # utils 파일에서 함
 # 경로 설정
 SRC_PATH = './get_data/fonts/source/'
 TRG_PATH = './get_data/fonts/target/'
-OUTPUT_PATH = './get_data/dataset-11172/'  # 원본 이미지가 저장된 경로
+OUTPUT_PATH = './get_data/cropped_dataset/'  # 원본 이미지가 저장된 경로
 
+# CROPPED_OUTPUT_PATH = './get_data/cropped/'  # 크롭 후 저장할 경로
+# os.makedirs(CROPPED_OUTPUT_PATH, exist_ok=True)  # 크롭 경로가 없으면 생성
 
-CROPPED_OUTPUT_PATH = './get_data/cropped/'  # 크롭 후 저장할 경로
 CHARSET_FILE = './get_data/2350-common-hangul.txt'  # 문자 집합 파일 경로
-os.makedirs(CROPPED_OUTPUT_PATH, exist_ok=True)  # 크롭 경로가 없으면 생성
-
 def load_charset(file_path):
     """파일에서 문자 집합을 로드"""
     try:
@@ -66,20 +65,20 @@ if __name__ == "__main__":
                 target_img_array = np.array(target_img)
                 
                # 1. Crop 단계
-                src_cropped_img = tight_crop_image(src_img_array, verbose=True)
-                target_cropped_img = tight_crop_image(target_img_array, verbose=True)
+                src_cropped_img = tight_crop_image(src_img_array, verbose=False)
+                target_cropped_img = tight_crop_image(target_img_array, verbose=False)
 
                 # 크롭된 이미지 시각화 및 저장
-                Image.fromarray(src_cropped_img.astype(np.uint8)).save(f"src_cropped_{count}.png")
-                Image.fromarray(target_cropped_img.astype(np.uint8)).save(f"target_cropped_{count}.png")
+                # Image.fromarray(src_cropped_img.astype(np.uint8)).save(f"src_cropped_{count}.png")
+                # Image.fromarray(target_cropped_img.astype(np.uint8)).save(f"target_cropped_{count}.png")
 
                 # 2. Resize 및 Padding 단계
-                src_processed_img = add_padding(src_cropped_img, image_size=CANVAS_SIZE, verbose=True)
-                target_processed_img = add_padding(target_cropped_img, image_size=CANVAS_SIZE, verbose=True)
+                src_processed_img = add_padding(src_cropped_img, image_size=CANVAS_SIZE, verbose=False)
+                target_processed_img = add_padding(target_cropped_img, image_size=CANVAS_SIZE, verbose=False)
 
                 # 패딩된 이미지 시각화 및 저장
-                Image.fromarray(src_processed_img.astype(np.uint8)).save(f"src_padded_{count}.png")
-                Image.fromarray(target_processed_img.astype(np.uint8)).save(f"target_padded_{count}.png")
+                # Image.fromarray(src_processed_img.astype(np.uint8)).save(f"src_padded_{count}.png")
+                # Image.fromarray(target_processed_img.astype(np.uint8)).save(f"target_padded_{count}.png")
 
                 # 결합 이미지 생성
                 example_img = Image.new("RGB", (CANVAS_SIZE * 2, CANVAS_SIZE), (255, 255, 255)).convert('L')
@@ -87,7 +86,7 @@ if __name__ == "__main__":
                 example_img.paste(Image.fromarray(src_processed_img.astype(np.uint8)), (CANVAS_SIZE, 0))
 
                 # 저장
-                output_file = os.path.join(CROPPED_OUTPUT_PATH, f"{target_font_file}_{count:04d}.png")
+                output_file = os.path.join(OUTPUT_PATH, f"{target_font_file}_{count:04d}.png")
                 example_img.save(output_file)
                 print(f"Processed and saved: {output_file}")
                 count += 1
