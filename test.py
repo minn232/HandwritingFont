@@ -9,6 +9,8 @@ from common.utils import tight_crop_image, add_padding  # utils 파일에서 함
 SRC_PATH = './get_data/fonts/source/'
 TRG_PATH = './get_data/fonts/target/'
 OUTPUT_PATH = './get_data/dataset-11172/'  # 원본 이미지가 저장된 경로
+
+
 CROPPED_OUTPUT_PATH = './get_data/cropped/'  # 크롭 후 저장할 경로
 CHARSET_FILE = './get_data/2350-common-hangul.txt'  # 문자 집합 파일 경로
 os.makedirs(CROPPED_OUTPUT_PATH, exist_ok=True)  # 크롭 경로가 없으면 생성
@@ -25,7 +27,8 @@ def load_charset(file_path):
 
 
 if __name__ == "__main__":
-    CANVAS_SIZE = 128  # 캔버스 크기 설정
+    CANVAS_SIZE = 128   # 캔버스 크기 설정
+    FONT_SIZE = 64      # 폰트 크기 설정
     SRC_FONT_PATH = os.path.join(SRC_PATH, 'source_font.ttf')  # 소스 폰트 경로
 
     # 문자 집합 로드
@@ -36,7 +39,7 @@ if __name__ == "__main__":
 
     # 소스 폰트 불러오기
     try:
-        src_font = ImageFont.truetype(SRC_FONT_PATH, size=CANVAS_SIZE)
+        src_font = ImageFont.truetype(SRC_FONT_PATH, size=FONT_SIZE)
     except Exception as e:
         print(f"Error loading source font: {e}")
         exit(1)
@@ -47,7 +50,7 @@ if __name__ == "__main__":
     count = 0
     for target_font_file in target_fonts:
         try:
-            target_font = ImageFont.truetype(os.path.join(TRG_PATH, target_font_file), size=CANVAS_SIZE)
+            target_font = ImageFont.truetype(os.path.join(TRG_PATH, target_font_file), size=FONT_SIZE)
 
             for ch in charset:
                 # 문자 이미지 생성
