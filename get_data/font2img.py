@@ -2,15 +2,9 @@
 
 # -*- coding: utf-8 -*-
 
-import argparse
-import sys
-import glob
+from PIL import Image, ImageDraw, ImageFont
 import numpy as np
 import io, os
-from PIL import Image
-from PIL import ImageDraw
-from PIL import ImageFont
-import collections
 import random
 
 SRC_PATH = './get_data/fonts/source/'
@@ -21,10 +15,10 @@ OUTPUT_PATH = './get_data/dataset-11172/'
 def draw_single_char(ch, font, canvas_size):
     image = Image.new('L', (canvas_size, canvas_size), color=255)
     drawing = ImageDraw.Draw(image)
-
-    # 변경된 부분: textbbox로 텍스트 크기 계산
-    bbox = drawing.textbbox((0, 0), ch, font=font)
-    w, h = bbox[2] - bbox[0], bbox[3] - bbox[1]
+    
+    # 텍스트 바운딩 박스를 계산하여 너비와 높이 얻기
+    left, top, right, bottom = drawing.textbbox((0, 0), ch, font=font)
+    w, h = right - left, bottom - top
 
     drawing.text(
         ((canvas_size - w) / 2, (canvas_size - h) / 2),

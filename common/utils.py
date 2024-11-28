@@ -152,13 +152,16 @@ def tight_crop_image(img, verbose=False, resize_fix=False):
     이미지를 타이트하게 크롭합니다.
     """
     full_white = 255  # 흰색 픽셀 값
-    tolerance = 5  # 허용 오차 (흰색에서 약간 벗어난 값까지 감지)
-    col_sum = np.where(np.sum(img, axis=0) < (full_white - tolerance) * img.shape[0])
-    row_sum = np.where(np.sum(img, axis=1) < (full_white - tolerance) * img.shape[1])
+    # tolerance = 5  # 허용 오차 (흰색에서 약간 벗어난 값까지 감지)
+    # col_sum = np.where(np.sum(img, axis=0) < (full_white - tolerance) * img.shape[0])
+    # row_sum = np.where(np.sum(img, axis=1) < (full_white - tolerance) * img.shape[1])
+    
+    col_sum = np.where(np.sum(img, axis=0) < full_white * img.shape[0])
+    row_sum = np.where(np.sum(img, axis=1) < full_white * img.shape[1])
 
     if col_sum[0].size > 0 and row_sum[0].size > 0:
-        y1, y2 = row_sum[0][0], row_sum[0][-1]
-        x1, x2 = col_sum[0][0], col_sum[0][-1]
+        y1, y2 = row_sum[0][0], row_sum[0][-1] + 1  # y2를 +1하여 포함
+        x1, x2 = col_sum[0][0], col_sum[0][-1] + 1  # x2를 +1하여 포함
         cropped_image = img[y1:y2, x1:x2]
     else:
         cropped_image = img  # 감지 실패 시 원본 반환
