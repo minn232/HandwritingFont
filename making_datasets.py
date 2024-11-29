@@ -10,8 +10,6 @@ SRC_PATH = './get_data/fonts/source/'
 TRG_PATH = './get_data/fonts/target/'
 OUTPUT_PATH = './get_data/cropped_dataset/'  # 원본 이미지가 저장된 경로
 
-
-# TODO) 한글 글자 중 랜덤으로 3000개 뽑아서 charset 만들기
 CHARSET_FILE = './get_data/2350-common-hangul.txt'  # 문자 집합 파일 경로
 def make_charset():
 
@@ -83,12 +81,12 @@ if __name__ == "__main__":
                 
                 # 2. Resize 단계
                 shift_x, shift_y = 0, 0
-                nw, nh = src_cropped_img.shape[:2]
-                target_resized_img = shift_and_resize_image(target_cropped_img, shift_x, shift_y, nw, nh)
+                nh, nw = src_cropped_img.shape[:2]
+                target_resized_img = shift_and_resize_image(np.array(target_cropped_img), shift_x, shift_y, nw, nh)
                 
                 # 3. Padding 단계
                 src_processed_img = add_padding(src_cropped_img, image_size=CANVAS_SIZE, verbose=False)
-                target_processed_img = add_padding(target_cropped_img, image_size=CANVAS_SIZE, verbose=False)
+                target_processed_img = add_padding(target_resized_img, image_size=CANVAS_SIZE, verbose=False)
 
                 # 결합 이미지 생성
                 example_img = Image.new("RGB", (CANVAS_SIZE * 2, CANVAS_SIZE), (255, 255, 255)).convert('L')

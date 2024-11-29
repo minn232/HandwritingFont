@@ -87,9 +87,11 @@ def shift_and_resize_image(img, shift_x, shift_y, nw, nh):
     try:
         img_pil = Image.fromarray(img)  # NumPy 배열을 PIL 이미지로 변환
         resized_img = img_pil.resize((nw, nh), Image.LANCZOS)  # Pillow의 resize 함수 사용
+        
         resized_array = np.array(resized_img)  # PIL 이미지를 다시 NumPy 배열로 변환
-        cropped_img = resized_array[shift_x:shift_x + img.shape[0], shift_y:shift_y + img.shape[1]]
-        return cropped_img
+        # cropped_img = resized_array[shift_x:shift_x + img.shape[0], shift_y:shift_y + img.shape[1]]
+        
+        return resized_array
     except Exception as e:
         print(f"Error in shift_and_resize_image: {e}")
         return img
@@ -152,9 +154,6 @@ def tight_crop_image(img, verbose=False, resize_fix=False):
     이미지를 타이트하게 크롭합니다.
     """
     full_white = 255  # 흰색 픽셀 값
-    # tolerance = 5  # 허용 오차 (흰색에서 약간 벗어난 값까지 감지)
-    # col_sum = np.where(np.sum(img, axis=0) < (full_white - tolerance) * img.shape[0])
-    # row_sum = np.where(np.sum(img, axis=1) < (full_white - tolerance) * img.shape[1])
     
     col_sum = np.where(np.sum(img, axis=0) < full_white * img.shape[0])
     row_sum = np.where(np.sum(img, axis=1) < full_white * img.shape[1])
