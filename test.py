@@ -2,7 +2,7 @@ from get_data import font2img
 from PIL import ImageFont, Image
 import numpy as np
 import os
-from common.utils import tight_crop_image, add_padding  # utils 파일에서 함수 가져오기
+from common.utils import tight_crop_image, add_padding, shift_and_resize_image  # utils 파일에서 함수 가져오기
 import random
 
 # 경로 설정
@@ -77,11 +77,16 @@ if __name__ == "__main__":
                 src_img_array = np.array(src_img)
                 target_img_array = np.array(target_img)
                 
-               # 1. Crop 단계
+                # 1. Crop 단계
                 src_cropped_img = tight_crop_image(src_img_array, verbose=False)
                 target_cropped_img = tight_crop_image(target_img_array, verbose=False)
-
-                # 2. Resize 및 Padding 단계
+                
+                # 2. Resize 단계
+                shift_x, shift_y = 0, 0
+                nw, nh = src_cropped_img.shape[:2]
+                target_resized_img = shift_and_resize_image(target_cropped_img, shift_x, shift_y, nw, nh)
+                
+                # 3. Padding 단계
                 src_processed_img = add_padding(src_cropped_img, image_size=CANVAS_SIZE, verbose=False)
                 target_processed_img = add_padding(target_cropped_img, image_size=CANVAS_SIZE, verbose=False)
 
