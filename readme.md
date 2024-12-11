@@ -18,10 +18,8 @@
 
 
 ## \# 프로젝트 소개
-GAN 기반으로 된 모델을 활용해 사람의 손글씨를 학습하고 그 글씨체를 반영한 글자 이미지 및 폰트를 생성하는 프로젝트입니다. 사람의 손글씨를 학습하기 전에, 먼저 약 75,000장 정도의 대량의 컴퓨터 폰트 글자 이미지로 사전 학습을 진행하고, 그 후 약 200장의 적은 양의 사람 손글씨 데이터로 Transfer Learning(전이학습)을 진행합니다.
+이 프로젝트는 GAN 기반 모델을 활용해 사람의 손글씨를 학습하고, 그 글씨체를 반영한 글자 이미지를 생성하는 것입니다. 사람의 손글씨를 학습하기 전에, 먼저 약 75,000장 정도의 대량의 컴퓨터 폰트 글자 이미지로 사전 학습을 진행하고, 그 후 약 200장의 적은 양의 사람 손글씨 데이터로 전이 학습(Transfer Learning)을 진행합니다.
 
-
-프로젝트의 전체 진행 과정, 이론, 실험 등은 [블로그 글](https://jeinalog.tistory.com/15)에서 더 자세히 읽으실 수 있습니다.
 
 
 
@@ -184,12 +182,25 @@ main
 
 
 ## \# Acknowledgements
+```
 Code derived and rehashed from:
 
 - [zi2zi](https://github.com/kaonashi-tyc/zi2zi) by [kaonashi-tyc](https://github.com/kaonashi-tyc)
-- [jeina7](https://github.com/jeina7) by []
+  -> 생성적 적대 신경망(Generative Adversarial Network, GAN)의 주요 구성 요소를 차용
 
+- [neural-fonts](https://github.com/periannath/neural-fonts) by[periannath](https://github.com/periannath)
+  -> 손글씨 템플릿 이용.
 
+- [GAN-handwriting-styler](https://github.com/jeina7/GAN-handwriting-style) by [jeina7](https://github.com/jeina7)
+  -> GAN의 손실 함수 차용
+```
+```
+code created using concepts from:
+- [blog](https://jeinalog.tistory.com/15)
+  -> 데이터셋 생성 과정
+  -> pre-trained 모델의 학습절차
+  
+```
 
 
 
@@ -201,4 +212,4 @@ Code derived and rehashed from:
 
 
 ## \# Lisence
-Apache 2.0
+MIT Lisence
