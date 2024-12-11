@@ -168,6 +168,8 @@ main
 ├── making_datasets.py      # datasets for pretraining
 └── making_model.py         # (Unfinished) make pretrained-model
 └── making_pickle.py        # .png -> .pkl
+
+http://naver.me/G1wgSrh4    # val.pkl, train.pkl, val.obj, train.obj
 ```
 
 
