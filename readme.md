@@ -169,7 +169,7 @@ main
 └── making_model.py         # (Unfinished) make pretrained-model
 └── making_pickle.py        # .png -> .pkl
 
-[.pkl and .obj files](http://naver.me/G1wgSrh4)    # val.pkl, train.pkl, val.obj, train.obj
+http://naver.me/G1wgSrh4    # val.pkl, train.pkl, val.obj, train.obj
 ```
 
 
